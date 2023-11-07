@@ -1,0 +1,475 @@
+{
+    "id": "chargedesk",
+    "name": "ChargeDesk",
+    "icon": "chargedesk.png",
+    "instruction": {
+        "type": "url",
+        "url": ""
+    },
+    "description": "",
+    "version": "1.0.0",
+    "position": "0aaa",
+    "llmFormat": true,
+    "connectorConfig": {
+        "developerAuthModes": [
+            "ap-chargedeskbasic"
+        ],
+        "endUserAuthModes": [],
+        "authProfiles": [
+            {
+                
+                "_id": "ap-0cb2abff-4eca-5de9-8964-2f8cb7e9c12f",
+                "connectorEnabled": false,
+                "hasTenancy": false,
+                "sso_type": "basic",
+                "channel_auth": "default",
+                "state": "configured",
+                "name": "ChargeDesk",
+                "streamId": "st-a1e50910-5e25-5ac5-94f0-715a4c74dcf6",
+                "fields": [
+                    {
+                        "type": "header",
+                        "key": "Authorization",
+                        "value": "Basic {{passphrase}}"
+                    }
+                ],
+                "headerFields": [],
+                "payloadFields": [],
+                "appConfig": {
+                    "baseURL": ""
+                },
+                "inputFields": [],
+                "validators": [
+                    {
+                        "id": "authValidator",
+                        "required": true
+                    }
+                ]
+            }
+        ]
+    },
+    "actions": [
+        {
+            "name": "createCustomer",
+            "displayName": "Create a customer",
+            "icon": "chargedesk.png",
+            "description": "This action will create a ChargeDesk customer.",
+            "pipeline": [
+                {
+                    "nodeId": "node01",
+                    "nodeName": "createCustomerIntent",
+                    "nodeType": "intent",
+                    "nextNode": "node02"
+                },
+                {
+                    "nodeId": "node02",
+                    "nodeName": "customerId",
+                    "nodeType": "entity",
+                    "entityType": "string",
+                    "entityPrompt": "Please provide a unique customer ID.",
+                    "entityErrorPrompt": "Please enter a valid customer ID.",
+                    "nextNode": "node03"
+                },
+                {
+                    "nodeId": "node03",
+                    "nodeName": "createCustomerService",
+                    "nodeType": "service",
+                    "requestParams": {
+                        "cusId": {
+                            "type": "entity",
+                            "value": "node02"
+                        }
+                    },
+                    "requestHeaders": {
+                        "type": "raw",
+                        "value": "{\"Content-Type\":\"application/x-www-form-urlencoded\"}"
+                    },
+                    "requestPayload": {
+                        "type": "raw",
+                        "value": "{\"country\":\"IN\",\"customer_id\":\"[$cusId$]\"}"
+                    },
+                    "idp": "ChargeDesk oauth2 default",
+                    "serviceType": "integrationservice",
+                    "endPoint": {
+                        "host": "api.chargedesk.com",
+                        "port": "",
+                        "path": "/v1/customers",
+                        "protocol": "https",
+                        "method": "post",
+                        "connectorEnabled": false,
+                        "piiDataEnabled": false
+                    },
+                    "nextNode": "node04"
+                },
+                {
+                    "nodeId": "node04",
+                    "nodeName": "dealInfo",
+                    "nodeType": "message",
+                    "messageObj": [
+                        {
+                            "channel": "default",
+                            "text": "const%20Response%20%3D%20[$createCustomerService$].response%3B%0Aconst%20StatusCode%20%3D%20Response.statusCode%20*%201%3B%0A%0Alet%20response%20%3D%20''%3B%0Aif%20(StatusCode%20%3E%3D%20200%20%26%26%20StatusCode%20%3C%3D%20299)%20%7B%0A%20%20%20%20const%20responseResult%20%3D%20Response.body%3B%0A%20%20%20%20const%20id%20%3D%20responseResult.customer_id%3B%0A%20%20%20%20const%20visitLink%20%3D%20responseResult.manage_url%3B%0A%20%20%20%20const%20colorCode%20%3D%20%22%23ee6123%22%3B%0A%0A%20%20%20%20let%20subListItem%20%3D%0A%20%20%20%20%20%20%20%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20%60%24%7Bid%7D%60%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22isCollapsed%22%3A%20false%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22imageSize%22%3A%20%22small%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22iconShape%22%3A%20%22circle-img%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22view%22%3A%20%22default%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22iconSize%22%3A%20%22small%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22isAccordian%22%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22titleStyles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22font-size%22%3A%20%2216px%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22borderAvailable%22%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22borderStyles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Width%22%3A%20%226px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Height%22%3A%20%2236px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Radius%22%3A%20%224px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Padding%22%3A%20%2210px%2C%200px%2C%200px%2C%200px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22background%22%3A%20colorCode%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22textInformation%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20responseResult.username%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22seeMoreAction%22%3A%20%22dropdown%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttonsLayout%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22displayLimit%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22count%22%3A%20%221%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttonAligment%22%3A%20%22%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttons%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22type%22%3A%20%22url%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20%22View%20stats%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22url%22%3A%20visitLink%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttonStyles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22background%22%3A%20%22%230D6EFD%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22color%22%3A%20%22%23FFFFFF%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22synonyms%22%3A%20%5B%5D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22headerOptions%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22type%22%3A%20%22icon%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22icon%22%3A%20%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAABAAAAARCAYAAADUryzEAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAB9SURBVHgB1dDBDYAgDAXQggzACEQcwFEcgRHcRDcwbsBCJuzhARXjCW0bvOi%2FkLT8dyjA52JSmp77X%2BajqgUBg6ntBGWA1OmJwnEQiW4ZCA4wEBogEB5wIcZ2L4A4h7D4MuAsu7sV44jPZRogyjjAKB9R%2BWj1EJXeyyP8IhvS4jEyv8KUgAAAAABJRU5ErkJggg%3D%3D%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22iconRotation%22%3A%20%22180%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%5D%0A%0A%0A%20%20%20%20var%20message%20%3D%20%7B%0A%20%20%20%20%20%20%20%20%22type%22%3A%20%22template%22%2C%0A%20%20%20%20%20%20%20%20%22payload%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%22template_type%22%3A%20%22advancedMultiListTemplate%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22previewModalTitle%22%3A%20responseResult.username%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22seeMore%22%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22seeMoreAction%22%3A%20%22modal%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22listItemDisplayCount%22%3A%201%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22listViewType%22%3A%20%22normal%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22seeMoreIcon%22%3A%20%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6%2BR8AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAADgSURBVHgBjZLREcFAEIZ3944XDCUogQ7ogArwajBKSAmSB6%2BogA7SglKO4UWSXbkMGeFGsk93t%2F93e%2FvfIqTRXEQDIBhASUgsp%2Fu2fqbG%2FNFDomN61ilhOqRVaAto1DgS4MMtqK1LIGiuIrAvotfeQLXIdNqVaS05BJSuXSOguQbU%2F8yTC1IKx8I8s30ISO8774SsGBXt0l59V5I06b21MlevpZsIhyKZOZ4LwsL1JUDqnld4XpUKPz1VBLIByC1XSH3jK%2FOuGnM8LciR2igw4TgZ5pDZ4P8PFr4Iw9jO3hOVYGvbr6vWzAAAAABJRU5ErkJggg%3D%3D%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22userUtterance%22%3A%20%22%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22listItems%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20%22Customer%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22subListItems%22%3A%20subListItem%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%5D%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%7D%0Aresponse%20%3D%20JSON.stringify(message)%0Aprint(response)",
+                            "type": "uxmap"
+                        }
+                    ],
+                    "nextNode": "end"
+                }
+      
+            ]
+        },
+        {
+            "name": "retrieveCustomer",
+            "displayName": "retrieve a customer",
+            "icon": "chargedesk.png",
+            "description": "This action will retrieve a ChargeDesk customer using customer ID.",
+            "pipeline": [
+                {
+                    "nodeId": "node01",
+                    "nodeName": "retrieveCustomerIntent",
+                    "nodeType": "intent",
+                    "nextNode": "node02"
+                },
+                {
+                    "nodeId": "node02",
+                    "nodeName": "customerId",
+                    "nodeType": "entity",
+                    "entityType": "string",
+                    "entityPrompt": "Please provide the customer ID.",
+                    "entityErrorPrompt": "Please enter a valid customer ID.",
+                    "nextNode": "node03"
+                },
+                {
+                    "nodeId": "node03",
+                    "nodeName": "retrieveCustomerService",
+                    "nodeType": "service",
+                    "requestParams": {
+                        "cusId": {
+                            "type": "entity",
+                            "value": "node02"
+                        }
+                    },
+                    "requestHeaders": {
+                        "type": "raw",
+                        "value": "{}"
+                    },
+                    "requestPayload": {
+                        "type": "raw",
+                        "value": "%7B%7D"
+                    },
+                    "idp": "ChargeDesk oauth2 default",
+                    "serviceType": "integrationservice",
+                    "endPoint": {
+                        "host": "api.chargedesk.com",
+                        "port": "",
+                        "path": "/v1/customers/[$cusId$]",
+                        "protocol": "https",
+                        "method": "get",
+                        "connectorEnabled": false,
+                        "piiDataEnabled": false
+                    },
+                    "nextNode": "node04"
+                },
+                {
+                    "nodeId": "node04",
+                    "nodeName": "dealInfo",
+                    "nodeType": "message",
+                    "messageObj": [
+                        {
+                            "channel": "default",
+                            "text": "const%20Response%20%3D%20[$retrieveCustomerService$].response%3B%0Aconst%20StatusCode%20%3D%20Response.statusCode%20*%201%3B%0A%0Alet%20response%20%3D%20''%3B%0Aif%20(StatusCode%20%3E%3D%20200%20%26%26%20StatusCode%20%3C%3D%20299)%20%7B%0A%20%20%20%20const%20responseResult%20%3D%20Response.body%3B%0A%20%20%20%20const%20id%20%3D%20responseResult.customer_id%3B%0A%20%20%20%20const%20visitLink%20%3D%20responseResult.manage_url%3B%0A%20%20%20%20const%20colorCode%20%3D%20%22%23ee6123%22%3B%0A%0A%20%20%20%20let%20subListItem%20%3D%0A%20%20%20%20%20%20%20%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20%60%24%7Bid%7D%60%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22isCollapsed%22%3A%20false%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22imageSize%22%3A%20%22small%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22iconShape%22%3A%20%22circle-img%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22view%22%3A%20%22default%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22iconSize%22%3A%20%22small%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22isAccordian%22%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22titleStyles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22font-size%22%3A%20%2216px%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22borderAvailable%22%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22borderStyles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Width%22%3A%20%226px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Height%22%3A%20%2236px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Radius%22%3A%20%224px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Padding%22%3A%20%2210px%2C%200px%2C%200px%2C%200px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22background%22%3A%20colorCode%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22textInformation%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20responseResult.username%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22seeMoreAction%22%3A%20%22dropdown%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttonsLayout%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22displayLimit%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22count%22%3A%20%221%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttonAligment%22%3A%20%22%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttons%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22type%22%3A%20%22url%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20%22View%20stats%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22url%22%3A%20visitLink%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttonStyles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22background%22%3A%20%22%230D6EFD%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22color%22%3A%20%22%23FFFFFF%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22synonyms%22%3A%20%5B%5D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22headerOptions%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22type%22%3A%20%22icon%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22icon%22%3A%20%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAABAAAAARCAYAAADUryzEAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAB9SURBVHgB1dDBDYAgDAXQggzACEQcwFEcgRHcRDcwbsBCJuzhARXjCW0bvOi%2FkLT8dyjA52JSmp77X%2BajqgUBg6ntBGWA1OmJwnEQiW4ZCA4wEBogEB5wIcZ2L4A4h7D4MuAsu7sV44jPZRogyjjAKB9R%2BWj1EJXeyyP8IhvS4jEyv8KUgAAAAABJRU5ErkJggg%3D%3D%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22iconRotation%22%3A%20%22180%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%5D%0A%0A%0A%20%20%20%20var%20message%20%3D%20%7B%0A%20%20%20%20%20%20%20%20%22type%22%3A%20%22template%22%2C%0A%20%20%20%20%20%20%20%20%22payload%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%22template_type%22%3A%20%22advancedMultiListTemplate%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22previewModalTitle%22%3A%20'Retrieved%20customer'%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22seeMore%22%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22seeMoreAction%22%3A%20%22modal%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22listItemDisplayCount%22%3A%201%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22listViewType%22%3A%20%22normal%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22seeMoreIcon%22%3A%20%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6%2BR8AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAADgSURBVHgBjZLREcFAEIZ3944XDCUogQ7ogArwajBKSAmSB6%2BogA7SglKO4UWSXbkMGeFGsk93t%2F93e%2FvfIqTRXEQDIBhASUgsp%2Fu2fqbG%2FNFDomN61ilhOqRVaAto1DgS4MMtqK1LIGiuIrAvotfeQLXIdNqVaS05BJSuXSOguQbU%2F8yTC1IKx8I8s30ISO8774SsGBXt0l59V5I06b21MlevpZsIhyKZOZ4LwsL1JUDqnld4XpUKPz1VBLIByC1XSH3jK%2FOuGnM8LciR2igw4TgZ5pDZ4P8PFr4Iw9jO3hOVYGvbr6vWzAAAAABJRU5ErkJggg%3D%3D%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22userUtterance%22%3A%20%22%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22listItems%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20%22Customer%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22subListItems%22%3A%20subListItem%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%5D%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%7D%0Aresponse%20%3D%20JSON.stringify(message)%0Aprint(response)",
+                            "type": "uxmap"
+                        }
+                    ],
+                    "nextNode": "end"
+                }
+      
+            ]
+        },
+        {
+            "name": "deleteCustomer",
+            "displayName": "Delete a customer",
+            "icon": "chargedesk.png",
+            "description": "This action will delete a ChargeDesk customer using customer ID.",
+            "pipeline": [
+                {
+                    "nodeId": "node01",
+                    "nodeName": "deleteCustomerIntent",
+                    "nodeType": "intent",
+                    "nextNode": "node02"
+                },
+                {
+                    "nodeId": "node02",
+                    "nodeName": "customerId",
+                    "nodeType": "entity",
+                    "entityType": "string",
+                    "entityPrompt": "Please provide the customer ID.",
+                    "entityErrorPrompt": "Please enter a valid customer ID.",
+                    "nextNode": "node03"
+                },
+                {
+                    "nodeId": "node03",
+                    "nodeName": "deleteCustomerService",
+                    "nodeType": "service",
+                    "requestParams": {
+                        "cusId": {
+                            "type": "entity",
+                            "value": "node02"
+                        }
+                    },
+                    "requestHeaders": {
+                        "type": "raw",
+                        "value": "{}"
+                    },
+                    "requestPayload": {
+                        "type": "raw",
+                        "value": "%7B%7D"
+                    },
+                    "idp": "ChargeDesk oauth2 default",
+                    "serviceType": "integrationservice",
+                    "endPoint": {
+                        "host": "api.chargedesk.com",
+                        "port": "",
+                        "path": "/v1/customers/[$cusId$]",
+                        "protocol": "https",
+                        "method": "delete",
+                        "connectorEnabled": false,
+                        "piiDataEnabled": false
+                    },
+                    "nextNode": "node04"
+                },
+                {
+                    "nodeId": "node04",
+                    "nodeName": "dealInfo",
+                    "nodeType": "message",
+                    "messageObj": [
+                        {
+                            "channel": "default",
+                            "text": "const%20Response%20%3D%20[$deleteCustomerService$].response%3B%0Aconst%20success%20%3D%20Response.body.success%3B%0Alet%20response%20%3D%20''%3B%0Aif%20(success%3D%3D%3D%20true)%20%7B%0Aconst%20responseResult%20%3D%20Response.body%3B%0A%0Alet%20plainText%20%3D%20'Customer%20deleted%20successfully.'%0A%0Aresponse%20%3D%20plainText%0A%7D%0Aelse%0Aresponse%20%3D%20%60Error%20%24%7BStatusCode%7D.%5Cn%24%7BResponse.body.message%7D%60%0Aprint(response)%3B",
+                            "type": "uxmap"
+                        }
+                    ],
+                    "nextNode": "end"
+                }
+      
+            ]
+        },
+        {
+            "name": "groupedCustomer",
+            "displayName": "Grouped customer",
+            "icon": "chargedesk.png",
+            "description": "This action will return the billing history of the customer",
+            "pipeline": [
+                {
+                    "nodeId": "node01",
+                    "nodeName": "groupedCustomerIntent",
+                    "nodeType": "intent",
+                    "nextNode": "node02"
+                },
+                {
+                    "nodeId": "node02",
+                    "nodeName": "customerId",
+                    "nodeType": "entity",
+                    "entityType": "string",
+                    "entityPrompt": "Please provide the customer ID.",
+                    "entityErrorPrompt": "Please enter a valid customer ID.",
+                    "nextNode": "node03"
+                },
+                {
+                    "nodeId": "node03",
+                    "nodeName": "groupedCustomerService",
+                    "nodeType": "service",
+                    "requestParams": {
+                        "cusId": {
+                            "type": "entity",
+                            "value": "node02"
+                        }
+                    },
+                    "requestHeaders": {
+                        "type": "raw",
+                        "value": "{}"
+                    },
+                    "requestPayload": {
+                        "type": "raw",
+                        "value": "%7B%7D"
+                    },
+                    "idp": "ChargeDesk oauth2 default",
+                    "serviceType": "integrationservice",
+                    "endPoint": {
+                        "host": "api.chargedesk.com",
+                        "port": "",
+                        "path": "/v1/customers/grouped?customer%5Bid%5D=[$cusId$]",
+                        "protocol": "https",
+                        "method": "get",
+                        "connectorEnabled": false,
+                        "piiDataEnabled": false
+                    },
+                    "nextNode": "node04"
+                },
+                {
+                    "nodeId": "node04",
+                    "nodeName": "dealInfo",
+                    "nodeType": "message",
+                    "messageObj": [
+                        {
+                            "channel": "default",
+                            "text": "const%20Response%20%3D%20[groupedCustomerService].response%3B%0Aconst%20StatusCode%20%3D%20Response.statusCode%20*%201%3B%0A%0Alet%20response%20%3D%20''%3B%0Aif%20(StatusCode%20%3E%3D%20200%20%26%26%20StatusCode%20%3C%3D%20299)%20%7B%0A%20%20%20%20const%20responseResult%20%3D%20Response.body%3B%0A%20%20%20%20%2F%2Fconst%20shortUrl%20%3D%20responseResult.link%3B%0A%20%20%20%20%0A%20%20%20%20%2F%2Fconst%20longUrl%20%3D%20responseResult.long_url%3B%0A%20%20%20%20const%20colorCode%20%3D%20%22%23ee6123%22%3B%0A%20%20%20%20const%20data%20%3D%20responseResult.data%3B%0A%20%20%20%20let%20subListItem%20%3D%20%5B%5D%0A%20%20%20%20data.forEach((d)%3D%3E%7B%0A%20%20%20%20%20%20%20%20%0A%20%20%20%20%20%20%20%20%20%20%20%20const%20id%20%3D%20d.customers%5B0%5D.customer.customer_id%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20const%20visitLink%20%3D%20d.customers%5B0%5D.customer.manage_url%3B%0A%20%20%20%20%20%20%20%20%0A%20%20%20%20%20%20%20%20%20newList%20%3D%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20%60%24%7Bid%7D%60%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22isCollapsed%22%3A%20false%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22imageSize%22%3A%20%22small%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22iconShape%22%3A%20%22circle-img%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22view%22%3A%20%22default%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22iconSize%22%3A%20%22small%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22isAccordian%22%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22titleStyles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22font-size%22%3A%20%2216px%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22borderAvailable%22%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22borderStyles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Width%22%3A%20%226px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Height%22%3A%20%2236px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Radius%22%3A%20%224px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Padding%22%3A%20%2210px%2C%200px%2C%200px%2C%200px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22background%22%3A%20colorCode%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22textInformation%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20d.customers%5B0%5D.customer.username%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22seeMoreAction%22%3A%20%22dropdown%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttonsLayout%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22displayLimit%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22count%22%3A%20%221%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttonAligment%22%3A%20%22%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttons%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22type%22%3A%20%22url%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20%22View%20stats%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22url%22%3A%20visitLink%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttonStyles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22background%22%3A%20%22%230D6EFD%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22color%22%3A%20%22%23FFFFFF%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22synonyms%22%3A%20%5B%5D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22headerOptions%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22type%22%3A%20%22icon%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22icon%22%3A%20%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAABAAAAARCAYAAADUryzEAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAB9SURBVHgB1dDBDYAgDAXQggzACEQcwFEcgRHcRDcwbsBCJuzhARXjCW0bvOi%2FkLT8dyjA52JSmp77X%2BajqgUBg6ntBGWA1OmJwnEQiW4ZCA4wEBogEB5wIcZ2L4A4h7D4MuAsu7sV44jPZRogyjjAKB9R%2BWj1EJXeyyP8IhvS4jEyv8KUgAAAAABJRU5ErkJggg%3D%3D%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22iconRotation%22%3A%20%22180%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%0A%20%20%20%20%20%20%20%20subListItem.push(newList)%3B%0A%0A%20%20%20%20%7D)%0A%0A%20%20%20%20%0A%0A%20%20%20%20var%20message%20%3D%20%7B%0A%20%20%20%20%20%20%20%20%22type%22%3A%20%22template%22%2C%0A%20%20%20%20%20%20%20%20%22payload%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%22template_type%22%3A%20%22advancedMultiListTemplate%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22previewModalTitle%22%3A%20'Retrieved%20customer'%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22seeMore%22%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22seeMoreAction%22%3A%20%22modal%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22listItemDisplayCount%22%3A%201%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22listViewType%22%3A%20%22normal%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22seeMoreIcon%22%3A%20%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6%2BR8AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAADgSURBVHgBjZLREcFAEIZ3944XDCUogQ7ogArwajBKSAmSB6%2BogA7SglKO4UWSXbkMGeFGsk93t%2F93e%2FvfIqTRXEQDIBhASUgsp%2Fu2fqbG%2FNFDomN61ilhOqRVaAto1DgS4MMtqK1LIGiuIrAvotfeQLXIdNqVaS05BJSuXSOguQbU%2F8yTC1IKx8I8s30ISO8774SsGBXt0l59V5I06b21MlevpZsIhyKZOZ4LwsL1JUDqnld4XpUKPz1VBLIByC1XSH3jK%2FOuGnM8LciR2igw4TgZ5pDZ4P8PFr4Iw9jO3hOVYGvbr6vWzAAAAABJRU5ErkJggg%3D%3D%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22userUtterance%22%3A%20%22%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22listItems%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20%22Customer%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22subListItems%22%3A%20subListItem%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%5D%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%7D%0Aresponse%20%3D%20JSON.stringify(message)%0Aprint(response)",
+                            "type": "uxmap"
+                        }
+                    ],
+                    "nextNode": "end"
+                }
+      
+            ]
+        },
+        {
+            "name": "updateCustomer",
+            "displayName": "Update a customer",
+            "icon": "chargedesk.png",
+            "description": "This action will update a customer info using customer ID.",
+            "pipeline": [
+                {
+                    "nodeId": "node01",
+                    "nodeName": "updateCustomerIntent",
+                    "nodeType": "intent",
+                    "nextNode": "node02"
+                },
+                {
+                    "nodeId": "node02",
+                    "nodeName": "customerId",
+                    "nodeType": "entity",
+                    "entityType": "string",
+                    "entityPrompt": "Please provide the customer ID.",
+                    "entityErrorPrompt": "Please enter a valid customer ID.",
+                    "nextNode": "node03"
+                },
+                {
+                    "nodeId": "node03",
+                    "nodeName": "fieldName",
+                    "nodeType": "entity",
+                    "entityType": "string",
+                    "entityPrompt": "var%20message%3D%20%7B%0A%20%20%22type%22%3A%20%22template%22%2C%0A%20%20%22payload%22%3A%20%7B%0A%20%20%20%20%22text%22%3A%20%22Please%20select%20the%20field%20to%20update%22%2C%0A%20%20%20%20%22template_type%22%3A%20%22quick_replies%22%2C%0A%20%20%20%20%22quick_replies%22%3A%20%5B%0A%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%22content_type%22%3A%20%22text%22%2C%0A%20%20%20%20%20%20%20%20%22title%22%3A%20%22Username%22%2C%0A%20%20%20%20%20%20%20%20%22payload%22%3A%20%22username%22%2C%0A%20%20%20%20%20%20%20%20%22image_url%22%3A%20%22%22%2C%0A%20%20%20%20%20%20%20%20%22value%22%3A%20%22username%22%0A%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%22content_type%22%3A%20%22text%22%2C%0A%20%20%20%20%20%20%20%20%22title%22%3A%20%22Email%22%2C%0A%20%20%20%20%20%20%20%20%22payload%22%3A%20%22email%22%2C%0A%20%20%20%20%20%20%20%20%22image_url%22%3A%20%22%22%2C%0A%20%20%20%20%20%20%20%20%22value%22%3A%20%22email%22%0A%20%20%20%20%20%20%7D%2C%0A%09%7B%0A%20%20%20%20%20%20%20%20%22content_type%22%3A%20%22text%22%2C%0A%20%20%20%20%20%20%20%20%22title%22%3A%20%22Phone%22%2C%0A%20%20%20%20%20%20%20%20%22payload%22%3A%20%22phone%22%2C%0A%20%20%20%20%20%20%20%20%22image_url%22%3A%20%22%22%2C%0A%20%20%20%20%20%20%20%20%22value%22%3A%20%22phone%22%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%5D%0A%20%20%7D%2C%0A%20%20%22allPostbackButtons%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22content_type%22%3A%20%22text%22%2C%0A%20%20%20%20%20%20%22title%22%3A%20%22Username%22%2C%0A%20%20%20%20%20%20%22payload%22%3A%20%22username%22%2C%0A%20%20%20%20%20%20%22image_url%22%3A%20%22%22%2C%0A%20%20%20%20%20%20%22value%22%3A%20%22username%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22content_type%22%3A%20%22text%22%2C%0A%20%20%20%20%20%20%22title%22%3A%20%22Email%22%2C%0A%20%20%20%20%20%20%22payload%22%3A%20%22email%22%2C%0A%20%20%20%20%20%20%22image_url%22%3A%20%22%22%2C%0A%20%20%20%20%20%20%22value%22%3A%20%22email%22%0A%20%20%20%20%7D%2C%0A%09%7B%0A%20%20%20%20%20%20%20%20%22content_type%22%3A%20%22text%22%2C%0A%20%20%20%20%20%20%20%20%22title%22%3A%20%22Phone%22%2C%0A%20%20%20%20%20%20%20%20%22payload%22%3A%20%22phone%22%2C%0A%20%20%20%20%20%20%20%20%22image_url%22%3A%20%22%22%2C%0A%20%20%20%20%20%20%20%20%22value%22%3A%20%22phone%22%0A%20%20%20%20%20%20%7D%0A%20%20%5D%0A%7D%20%0Aprint(JSON.stringify(message))%3B%0A",
+                    "entityErrorPrompt": "Please select a field name.",
+                    "nextNode": "node04"
+                },
+                {
+                    "nodeId": "node04",
+                    "nodeName": "fieldValue",
+                    "nodeType": "entity",
+                    "entityType": "string",
+                    "entityPrompt": "Enter the updated value.",
+                    "entityErrorPrompt": "Please enter a valid customer ID.",
+                    "nextNode": "node05"
+                },
+                {
+                    "nodeId": "node05",
+                    "nodeName": "updateCustomerService",
+                    "nodeType": "service",
+                    "requestParams": {
+                        "cusId": {
+                            "type": "entity",
+                            "value": "node02"
+                        },
+                        "field": {
+                            "type": "entity",
+                            "value": "node03"
+                        },
+                        "value": {
+                            "type": "entity",
+                            "value": "node04"
+                        }
+                    },
+                    "requestHeaders": {
+                        "type": "raw",
+                        "value": "{\"Content-Type\":\"application/x-www-form-urlencoded\"}"
+                    },
+                    "requestPayload": {
+                        "type": "raw",
+                        "value": "{\"[$filed$]\":\"[$value$]\"}"
+                    },
+                    "idp": "ChargeDesk oauth2 default",
+                    "serviceType": "integrationservice",
+                    "endPoint": {
+                        "host": "api.chargedesk.com",
+                        "port": "",
+                        "path": "/v1/customers/[$cusId$]",
+                        "protocol": "https",
+                        "method": "post",
+                        "connectorEnabled": false,
+                        "piiDataEnabled": false
+                    },
+                    "nextNode": "node06"
+                },
+                {
+                    "nodeId": "node06",
+                    "nodeName": "dealInfo",
+                    "nodeType": "message",
+                    "messageObj": [
+                        {
+                            "channel": "default",
+                            "text": "const%20Response%20%3D%20[$updateCustomerService$].response%3B%0Aconst%20StatusCode%20%3D%20Response.statusCode%20*%201%3B%0A%0Alet%20response%20%3D%20''%3B%0Aif%20(StatusCode%20%3E%3D%20200%20%26%26%20StatusCode%20%3C%3D%20299)%20%7B%0A%20%20%20%20const%20responseResult%20%3D%20Response.body%3B%0A%20%20%20%20const%20id%20%3D%20responseResult.customer_id%3B%0A%20%20%20%20%2F%2Fconst%20shortUrl%20%3D%20responseResult.link%3B%0A%20%20%20%20const%20visitLink%20%3D%20responseResult.manage_url%3B%0A%20%20%20%20%2F%2Fconst%20longUrl%20%3D%20responseResult.long_url%3B%0A%20%20%20%20const%20colorCode%20%3D%20%22%23ee6123%22%3B%0A%0A%20%20%20%20let%20subListItem%20%3D%0A%20%20%20%20%20%20%20%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20%60%24%7Bid%7D%60%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22isCollapsed%22%3A%20false%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22imageSize%22%3A%20%22small%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22iconShape%22%3A%20%22circle-img%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22view%22%3A%20%22default%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22iconSize%22%3A%20%22small%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22isAccordian%22%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22titleStyles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22font-size%22%3A%20%2216px%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22borderAvailable%22%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22borderStyles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Width%22%3A%20%226px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Height%22%3A%20%2236px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Radius%22%3A%20%224px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Padding%22%3A%20%2210px%2C%200px%2C%200px%2C%200px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22background%22%3A%20colorCode%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22textInformation%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20responseResult.username%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22seeMoreAction%22%3A%20%22dropdown%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttonsLayout%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22displayLimit%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22count%22%3A%20%221%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttonAligment%22%3A%20%22%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttons%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22type%22%3A%20%22url%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20%22View%20stats%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22url%22%3A%20visitLink%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttonStyles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22background%22%3A%20%22%230D6EFD%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22color%22%3A%20%22%23FFFFFF%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22synonyms%22%3A%20%5B%5D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22headerOptions%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22type%22%3A%20%22icon%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22icon%22%3A%20%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAABAAAAARCAYAAADUryzEAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAB9SURBVHgB1dDBDYAgDAXQggzACEQcwFEcgRHcRDcwbsBCJuzhARXjCW0bvOi%2FkLT8dyjA52JSmp77X%2BajqgUBg6ntBGWA1OmJwnEQiW4ZCA4wEBogEB5wIcZ2L4A4h7D4MuAsu7sV44jPZRogyjjAKB9R%2BWj1EJXeyyP8IhvS4jEyv8KUgAAAAABJRU5ErkJggg%3D%3D%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22iconRotation%22%3A%20%22180%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%5D%0A%0A%0A%20%20%20%20var%20message%20%3D%20%7B%0A%20%20%20%20%20%20%20%20%22type%22%3A%20%22template%22%2C%0A%20%20%20%20%20%20%20%20%22payload%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%22template_type%22%3A%20%22advancedMultiListTemplate%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22previewModalTitle%22%3A%20'Retrieved%20customer'%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22seeMore%22%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22seeMoreAction%22%3A%20%22modal%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22listItemDisplayCount%22%3A%201%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22listViewType%22%3A%20%22normal%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22seeMoreIcon%22%3A%20%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6%2BR8AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAADgSURBVHgBjZLREcFAEIZ3944XDCUogQ7ogArwajBKSAmSB6%2BogA7SglKO4UWSXbkMGeFGsk93t%2F93e%2FvfIqTRXEQDIBhASUgsp%2Fu2fqbG%2FNFDomN61ilhOqRVaAto1DgS4MMtqK1LIGiuIrAvotfeQLXIdNqVaS05BJSuXSOguQbU%2F8yTC1IKx8I8s30ISO8774SsGBXt0l59V5I06b21MlevpZsIhyKZOZ4LwsL1JUDqnld4XpUKPz1VBLIByC1XSH3jK%2FOuGnM8LciR2igw4TgZ5pDZ4P8PFr4Iw9jO3hOVYGvbr6vWzAAAAABJRU5ErkJggg%3D%3D%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22userUtterance%22%3A%20%22%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22listItems%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20%22Customer%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22subListItems%22%3A%20subListItem%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%5D%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%7D%0Aresponse%20%3D%20JSON.stringify(message)%0Aprint(response)",
+                            "type": "uxmap"
+                        }
+                    ],
+                    "nextNode": "end"
+                }
+      
+            ]
+        },
+        {
+            "name": "listCustomers",
+            "displayName": "List all customers",
+            "icon": "chargedesk.png",
+            "description": "This action will list all ChargeDesk customers.",
+            "pipeline": [
+                {
+                    "nodeId": "node01",
+                    "nodeName": "listCustomersIntent",
+                    "nodeType": "intent",
+                    "nextNode": "node02"
+                },
+                {
+                    "nodeId": "node02",
+                    "nodeName": "listCustomersService",
+                    "nodeType": "service",
+                    "requestParams": {
+                      
+                    },
+                    "requestHeaders": {
+                        "type": "raw",
+                        "value": "{}"
+                    },
+                    "requestPayload": {
+                        "type": "raw",
+                        "value": "%7B%7D"
+                    },
+                    "idp": "ChargeDesk oauth2 default",
+                    "serviceType": "integrationservice",
+                    "endPoint": {
+                        "host": "api.chargedesk.com",
+                        "port": "",
+                        "path": "/v1/customers",
+                        "protocol": "https",
+                        "method": "get",
+                        "connectorEnabled": false,
+                        "piiDataEnabled": false
+                    },
+                    "nextNode": "node03"
+                },
+                {
+                    "nodeId": "node03",
+                    "nodeName": "dealInfo",
+                    "nodeType": "message",
+                    "messageObj": [
+                        {
+                            "channel": "default",
+                            "text": "const%20Response%20%3D%20[$listCustomersService$].response%3B%0Aconst%20StatusCode%20%3D%20Response.statusCode%20*%201%3B%0A%0Alet%20response%20%3D%20''%3B%0Aif%20(StatusCode%20%3E%3D%20200%20%26%26%20StatusCode%20%3C%3D%20299)%20%7B%0A%20%20%20%20const%20responseResult%20%3D%20Response.body%3B%0A%20%20%20%20%2F%2Fconst%20shortUrl%20%3D%20responseResult.link%3B%0A%20%20%20%20%0A%20%20%20%20%2F%2Fconst%20longUrl%20%3D%20responseResult.long_url%3B%0A%20%20%20%20const%20colorCode%20%3D%20%22%23ee6123%22%3B%0A%20%20%20%20const%20data%20%3D%20responseResult.data%3B%0A%20%20%20%20let%20subListItem%20%3D%20%5B%5D%0A%20%20%20%20data.forEach((d)%3D%3E%7B%0A%20%20%20%20%20%20%20%20%0A%20%20%20%20%20%20%20%20%20%20%20%20const%20id%20%3D%20d.customer_id%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20const%20visitLink%20%3D%20d.manage_url%3B%0A%20%20%20%20%20%20%20%20%0A%20%20%20%20%20%20%20%20%20newList%20%3D%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20%60%24%7Bid%7D%60%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22isCollapsed%22%3A%20false%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22imageSize%22%3A%20%22small%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22iconShape%22%3A%20%22circle-img%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22view%22%3A%20%22default%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22iconSize%22%3A%20%22small%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22isAccordian%22%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22titleStyles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22font-size%22%3A%20%2216px%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22borderAvailable%22%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22borderStyles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Width%22%3A%20%226px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Height%22%3A%20%2236px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Radius%22%3A%20%224px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Padding%22%3A%20%2210px%2C%200px%2C%200px%2C%200px%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22background%22%3A%20colorCode%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22textInformation%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20d.username%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22seeMoreAction%22%3A%20%22dropdown%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttonsLayout%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22displayLimit%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22count%22%3A%20%221%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttonAligment%22%3A%20%22%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttons%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22type%22%3A%20%22url%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20%22View%20stats%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22url%22%3A%20visitLink%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22buttonStyles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22background%22%3A%20%22%230D6EFD%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22color%22%3A%20%22%23FFFFFF%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22synonyms%22%3A%20%5B%5D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22headerOptions%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22type%22%3A%20%22icon%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22icon%22%3A%20%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAABAAAAARCAYAAADUryzEAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAB9SURBVHgB1dDBDYAgDAXQggzACEQcwFEcgRHcRDcwbsBCJuzhARXjCW0bvOi%2FkLT8dyjA52JSmp77X%2BajqgUBg6ntBGWA1OmJwnEQiW4ZCA4wEBogEB5wIcZ2L4A4h7D4MuAsu7sV44jPZRogyjjAKB9R%2BWj1EJXeyyP8IhvS4jEyv8KUgAAAAABJRU5ErkJggg%3D%3D%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22iconRotation%22%3A%20%22180%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%0A%20%20%20%20%20%20%20%20subListItem.push(newList)%3B%0A%0A%20%20%20%20%7D)%0A%0A%20%20%20%20%0A%0A%20%20%20%20var%20message%20%3D%20%7B%0A%20%20%20%20%20%20%20%20%22type%22%3A%20%22template%22%2C%0A%20%20%20%20%20%20%20%20%22payload%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%22template_type%22%3A%20%22advancedMultiListTemplate%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22previewModalTitle%22%3A%20'Retrieved%20customer'%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22seeMore%22%3A%20true%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22seeMoreAction%22%3A%20%22modal%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22listItemDisplayCount%22%3A%201%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22listViewType%22%3A%20%22normal%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22seeMoreIcon%22%3A%20%22data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6%2BR8AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAADgSURBVHgBjZLREcFAEIZ3944XDCUogQ7ogArwajBKSAmSB6%2BogA7SglKO4UWSXbkMGeFGsk93t%2F93e%2FvfIqTRXEQDIBhASUgsp%2Fu2fqbG%2FNFDomN61ilhOqRVaAto1DgS4MMtqK1LIGiuIrAvotfeQLXIdNqVaS05BJSuXSOguQbU%2F8yTC1IKx8I8s30ISO8774SsGBXt0l59V5I06b21MlevpZsIhyKZOZ4LwsL1JUDqnld4XpUKPz1VBLIByC1XSH3jK%2FOuGnM8LciR2igw4TgZ5pDZ4P8PFr4Iw9jO3hOVYGvbr6vWzAAAAABJRU5ErkJggg%3D%3D%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22userUtterance%22%3A%20%22%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22listItems%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22title%22%3A%20%22Customer%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22subListItems%22%3A%20subListItem%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%5D%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%7D%0Aresponse%20%3D%20JSON.stringify(message)%0Aprint(response)",
+                            "type": "uxmap"
+                        }
+                    ],
+                    "nextNode": "end"
+                }
+      
+            ]
+        }
+    ]
+}
